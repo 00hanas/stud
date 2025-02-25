@@ -85,14 +85,8 @@ class AddStudentForm(QWidget):
 
         # Check if any required field is empty
         if not first_name or not last_name or not student_id or not year_level or not gender or not college_code or not program_name:
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Icon.Warning)
-            msg_box.setWindowTitle("Input Error")
-            msg_box.setText("Please fill in all required fields.")
-            msg_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")  # Apply the same style
-            msg_box.exec()  # Show the message box
-            return  # Stop execution
-        
+            QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
+            return  
 
         # Define the CSV file path
         csv_file = "students.csv"
@@ -113,12 +107,7 @@ class AddStudentForm(QWidget):
             loadStudents(self.main_window.ui.tableWidget)
 
             # Show confirmation message
-            success_box = QMessageBox(self)
-            success_box.setIcon(QMessageBox.Icon.Information)
-            success_box.setWindowTitle("Success")
-            success_box.setText("Student added successfully!")
-            success_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")
-            success_box.exec()  # Show the message box
+            QMessageBox.information(None, "Success", "Student added successfully!")
 
         # Close the Add Student Form after saving
             self.close()

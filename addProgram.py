@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QMessageBox  # Change from QWidget to QDialog
+from PyQt6.QtWidgets import QDialog, QMessageBox 
 from addprogramui import Ui_ProgramForm
 from programsData import loadPrograms
 from collegecode import load_college_codes
@@ -10,7 +10,7 @@ class AddProgramForm(QDialog):  # Use QDialog instead of QWidget
         super().__init__(parent)
         self.ui = Ui_ProgramForm()
         self.ui.setupUi(self)
-        self.setModal(True)  # Make it a modal window (blocks main window until closed)
+        self.setModal(True)  
 
         #CollegeCode ComboBox
         self.populate_college_codes()
@@ -29,12 +29,7 @@ class AddProgramForm(QDialog):  # Use QDialog instead of QWidget
         program_name = self.ui.lineEdit_3.text()
 
         if not college_code or not program_code or not program_name:
-            err_box = QMessageBox(self)
-            err_box.setIcon(QMessageBox.Icon.Warning)
-            err_box.setWindowTitle("Input Error")
-            err_box.setText("Please fill in all required fields.")
-            err_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")  # Apply the same style
-            err_box.exec()
+            QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
             return
 
         csv_file = "programs.csv"
@@ -46,13 +41,7 @@ class AddProgramForm(QDialog):  # Use QDialog instead of QWidget
                 writer.writerow(["Program Code", "Program Name", "College Code"])  # Add headers if new file
             writer.writerow([program_code, program_name, college_code])
 
-        # Show confirmation message
-            success_box = QMessageBox(self)
-            success_box.setIcon(QMessageBox.Icon.Information)
-            success_box.setWindowTitle("Success")
-            success_box.setText("Program added successfully!")
-            success_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")
-            success_box.exec()  # Show the message box
+        QMessageBox.information(None, "Success", "Program added successfully!")
 
         # Refresh tableWidget_2 in the main window
         if self.parent():

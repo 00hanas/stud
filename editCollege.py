@@ -6,20 +6,20 @@ from studentsData import loadStudents
 from programsData import loadPrograms
 
 CSV_FILE = "colleges.csv"
-EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
-DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
+EDIT_MODE_COLOR = QColor("#FFF3CD")  # edit mode
+DEFAULT_COLOR = QColor("#FFFFFF")  #normal state
 
 class EditDelegate(QStyledItemDelegate):
     """Custom delegate to enforce font color during editing."""
     def paint(self, painter: QPainter, option, index):
         painter.save()
-        painter.setPen(QPen(QColor("#043927")))  # Set font color to #043927
+        painter.setPen(QPen(QColor("#043927")))  
         super().paint(painter, option, index)
         painter.restore()
 
     def createEditor(self, parent, option, index):
         editor = super().createEditor(parent, option, index)
-        editor.setStyleSheet("color: #043927;")  # Ensure text color stays #043927
+        editor.setStyleSheet("color: #043927;")  
         return editor
 
 def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
@@ -80,10 +80,10 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         HEADERS = reader.fieldnames
         data = list(reader)
     
-    # Get the original college code before modification
+    # original code
     old_college_code = data[row_idx]["College Code"]
 
-    # Read the edited values from the table
+    # read the edited values
     updated_row = {HEADERS[col_idx]: tableWidget.item(row_idx, col_idx).text().strip() for col_idx in range(len(HEADERS))}
 
     new_college_code = updated_row["College Code"]
@@ -117,10 +117,6 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
     tableWidget.setItemDelegateForRow(row_idx, None)  # Remove custom edit delegate
     # Restore Edit/Delete buttons
     create_edit_delete_buttons(row_idx, tableWidget, main_window)
-
-    if main_window is None:
-        print("ERROR: main_window is None. The table cannot be refreshed!")  # Debugging
-        return
 
     if main_window and hasattr(main_window.ui, 'tableWidget'):
         loadStudents(main_window.ui.tableWidget)  # Reload students

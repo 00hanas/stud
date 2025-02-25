@@ -15,14 +15,12 @@ def loadColleges(tableWidget, main_window=None):
         reader = csv.DictReader(file)  # Read CSV as dictionaries
         HEADERS = reader.fieldnames
         
-        
         data = list(reader)  # Convert to a list of dictionaries
 
         tableWidget.setColumnCount(len(HEADERS) + 1)  
         tableWidget.setHorizontalHeaderLabels(HEADERS + ["Actions"])
         tableWidget.horizontalHeader().setVisible(True)
         
-
         if data:  # Ensure file is not empty
             tableWidget.setRowCount(len(data))  
 

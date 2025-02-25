@@ -16,7 +16,7 @@ class MainApp(QMainWindow):
         self.ui = Ui_MainWindow()  # Create an instance of the UI class
         self.ui.setupUi(self)
 
-        #search
+
         # Connect search for Students page
         self.ui.lineEdit.textChanged.connect(lambda: search_table(self.ui.tableWidget, self.ui.lineEdit, self.ui.comboBox))  
         self.ui.comboBox.currentTextChanged.connect(lambda: search_table(self.ui.tableWidget, self.ui.lineEdit, self.ui.comboBox))  
@@ -90,21 +90,21 @@ class MainApp(QMainWindow):
             loadColleges(self.ui.tableWidget_3)  # Reload programs
     
     def apply_sort(self):
-        """Applies sorting based on user selection."""
+        
         column_name = self.ui.comboBox_2.currentText()  # Get selected column
         ascending = self.ui.comboBox_3.currentText() == "Ascending"  # Check sort order
 
         sort_table(self.ui.tableWidget, column_name, ascending)
 
     def apply_sort2(self):
-        """Applies sorting based on user selection."""
+        
         column_name = self.ui.comboBox_4.currentText()  # Get selected column
         ascending = self.ui.comboBox_5.currentText() == "Ascending"  # Check sort order
 
         sort_table(self.ui.tableWidget_2, column_name, ascending)
     
     def apply_sort3(self):
-        """Applies sorting based on user selection."""
+        
         column_name = self.ui.comboBox_7.currentText()  # Get selected column
         ascending = self.ui.comboBox_8.currentText() == "Ascending"  # Check sort order
 

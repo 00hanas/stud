@@ -2,12 +2,12 @@ import csv
 import re
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor, QBrush, QPainter, QPen
-from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QTableWidgetItem, QStyledItemDelegate
+from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QStyledItemDelegate
 
 CSV_FILE = "students.csv"
 
-EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
-DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
+EDIT_MODE_COLOR = QColor("#FFF3CD")  #  edit mode
+DEFAULT_COLOR = QColor("#FFFFFF")  # normal state
 
 class EditDelegate(QStyledItemDelegate):
     """Custom delegate to enforce font color during editing."""
@@ -82,6 +82,9 @@ def validate_constraints(row_data):
     college_code = row_data.get("College Code", "").strip().upper()
     program_code = row_data.get("Program Code", "").strip().upper()
 
+    if college_code == "N/A" and program_code == "N/A":
+        return None  # No validation errors
+
     # Validate ID Number format: XXXX-XXXX (e.g., 2024-0001)
     if not re.match(r"^\d{4}-\d{4}$", id_number):
         return f"Invalid ID Number format: {id_number}. Must be XXXX-XXXX."
@@ -95,11 +98,11 @@ def validate_constraints(row_data):
         return f"Invalid Year Level: {year_level}. Must be between 1 and 7."
 
     # Validate College Code: Must exist in colleges.csv
-    if not check_existence_in_csv(COLLEGES_FILE, "College Code", college_code):
+    if college_code != "N/A" and not check_existence_in_csv(COLLEGES_FILE, "College Code", college_code):
         return f"College Code '{college_code}' does not exist. Please add it on College Page."
 
     # Validate Program Code: Must exist in programs.csv under the given College Code
-    if not check_program_under_college(PROGRAMS_FILE, college_code, program_code):
+    if program_code != "N/A" and not check_program_under_college(PROGRAMS_FILE, college_code, program_code):
         return f"Program Code '{program_code}' does not exist under College '{college_code}'. Please add it on Program Page."
 
     return None  # No validation errors

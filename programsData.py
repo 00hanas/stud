@@ -10,7 +10,7 @@ EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
 DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
 
 def loadPrograms(tableWidget, main_window=None):
-    """Loads program data into the table widget."""
+    
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         HEADERS = reader.fieldnames

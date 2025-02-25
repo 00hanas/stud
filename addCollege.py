@@ -18,12 +18,7 @@ class AddCollegeForm(QDialog):
         college_name = self.ui.lineEdit_2.text()
 
         if not college_code or not college_name:
-            err_box = QMessageBox(self)
-            err_box.setIcon(QMessageBox.Icon.Warning)
-            err_box.setWindowTitle("Input Error")
-            err_box.setText("Please fill in all required fields.")
-            err_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")  # Apply the same style
-            err_box.exec()
+            QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
             return
         
         csv_file = "colleges.csv"
@@ -35,12 +30,7 @@ class AddCollegeForm(QDialog):
                 writer.writerow(["College Code", "College Name"])  # Add headers if new file
             writer.writerow([college_code, college_name])
 
-        success_box = QMessageBox(self)
-        success_box.setIcon(QMessageBox.Icon.Information)
-        success_box.setWindowTitle("Success")
-        success_box.setText("College added successfully!")
-        success_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")
-        success_box.exec()  # Show the message box
+        QMessageBox.information(None, "Success", "College added successfully!")
 
         # Refresh tableWidget_2 in the main window
         if self.parent():

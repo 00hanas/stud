@@ -42,7 +42,7 @@ def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
         background-color: #065f46;     
     }
     """)
-    editButton.clicked.connect(lambda _, idx=row_idx: enable_edit_mode(idx, tableWidget, main_window))
+    editButton.clicked.connect(lambda _, idx=row_idx: enable_edit_mode(int(idx), tableWidget, main_window))
     layout.addWidget(editButton)
 
     # Delete button
@@ -162,6 +162,8 @@ def update_students_program(old_program_code, new_program_code, old_college_code
     
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
+
+    
     column_count = tableWidget.columnCount()
 
     delegate = EditDelegate(tableWidget)

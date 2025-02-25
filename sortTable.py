@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import QTableWidgetItem, QTableWidget
 from PyQt6.QtCore import Qt
 
 def sort_table(tableWidget: QTableWidget, column_name: str, ascending: bool):
-    """Sorts the QTableWidget by the selected column, with tie-breaking based on the correct secondary column."""
 
     # Get primary sort column index
     primary_col = get_column_index(tableWidget, column_name)
@@ -38,4 +37,4 @@ def get_column_index(tableWidget: QTableWidget, column_name: str):
     for col in range(tableWidget.columnCount()):
         if tableWidget.horizontalHeaderItem(col).text() == column_name:
             return col
-    return None  # Column not found
+    return None  
