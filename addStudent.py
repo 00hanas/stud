@@ -1,12 +1,11 @@
 import csv
 import os
-from PyQt6.QtWidgets import QWidget, QMessageBox, QDialog, QVBoxLayout, QPushButton, QLabel, QTableWidget
-from addui import Ui_Form
+from PyQt6.QtWidgets import QWidget, QMessageBox, QDialog, QVBoxLayout, QPushButton, QLabel
+from addStudentui import Ui_Form
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 from studentsData import loadStudents
-from collegecode import load_college_codes
-from programcode import load_programs
+from programcode import loadprograms
 
 class CustomDialog(QDialog):
     """A custom dialog for displaying messages."""
@@ -38,12 +37,11 @@ class AddStudentForm(QWidget):
         self.ui.setupUi(self)
         
         self.main_window = main_window  # Reference to MainApp
-        self.programs_by_college = load_programs() 
+        
 
-        #CollegeCode ComboBox
-        self.populate_college_codes()
+        #Program Code ComboBox
+        self.populate_programs()
 
-        self.ui.comboBox_3.currentTextChanged.connect(self.populate_programs)
 
         id_validator = QRegularExpressionValidator(QRegularExpression(r"^\d{4}-\d{4}$"))
         self.ui.lineEdit_3.setValidator(id_validator)  # Apply the validator to ID field
@@ -51,18 +49,11 @@ class AddStudentForm(QWidget):
         # Connect Save button to save function
         self.ui.pushButton.clicked.connect(self.save_student)
 
-    def populate_college_codes(self):
-        """Populate the combo box with college codes"""
-        college_codes = load_college_codes()
-        self.ui.comboBox_3.addItems(college_codes)
-
     def populate_programs(self):
-        """Update program options based on the selected college code"""
-        selected_college = self.ui.comboBox_3.currentText()
-        self.ui.comboBox_4.clear()  # Assuming comboBox_4 is for Program Code
-        
-        if selected_college in self.programs_by_college:
-            self.ui.comboBox_4.addItems(self.programs_by_college[selected_college])
+        """Populate the combo box with college codes"""
+        programCode = loadprograms()
+        self.ui.comboBox_4.addItems(programCode)
+
 
     def save_student(self):
         """Collects student data and saves it to a CSV file."""
@@ -80,11 +71,10 @@ class AddStudentForm(QWidget):
         
         year_level = self.ui.comboBox.currentText()
         gender = self.ui.comboBox_2.currentText()
-        college_code = self.ui.comboBox_3.currentText()
         program_name = self.ui.comboBox_4.currentText()
 
         # Check if any required field is empty
-        if not first_name or not last_name or not student_id or not year_level or not gender or not college_code or not program_name:
+        if not first_name or not last_name or not student_id or not year_level or not gender or not program_name:
             QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
             return  
 
@@ -100,9 +90,10 @@ class AddStudentForm(QWidget):
 
                 # Write header only if file is new
                 if not file_exists:
-                    writer.writerow(["Student ID", "First Name", "Last Name", "Year Level", "Gender", "Program Name","College Code"])
+                    writer.writerow(["Student ID", "First Name", "Last Name", "Year Level", "Gender", "Program Name"])
             
-                writer.writerow([student_id, first_name, last_name, year_level, gender, program_name, college_code])
+                writer.writerow([student_id, first_name, last_name, year_level, gender, program_name])
+            
             # Reload the main table with updated data
             loadStudents(self.main_window.ui.tableWidget)
 
