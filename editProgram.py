@@ -1,7 +1,7 @@
 import csv
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor, QBrush, QPainter, QPen
-from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QTableWidgetItem, QStyledItemDelegate
+from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QComboBox, QStyledItemDelegate, QCompleter
 from studentsData import loadStudents
 import programsData
 
@@ -10,7 +10,11 @@ EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
 DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
 
 class EditDelegate(QStyledItemDelegate):
-    """Custom delegate to enforce font color during editing."""
+    def __init__(self, parent=None, headers=None, college_codes=None):
+        super().__init__(parent)
+        self.headers = headers or []
+        self.college_codes = college_codes or []
+
     def paint(self, painter: QPainter, option, index):
         painter.save()
         painter.setPen(QPen(QColor("#043927")))  # Set font color to #043927
@@ -18,9 +22,37 @@ class EditDelegate(QStyledItemDelegate):
         painter.restore()
 
     def createEditor(self, parent, option, index):
-        editor = super().createEditor(parent, option, index)
-        editor.setStyleSheet("color: #043927;")  # Ensure text color stays #043927
-        return editor
+        column = index.column()
+        column_name = self.headers[column] if column < len(self.headers) else ""
+
+        if column_name == "College Code":
+            combo = QComboBox(parent)
+            combo.setEditable(True)
+            combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+            combo.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            combo.addItems(self.college_codes)
+            combo.setStyleSheet("color: #043927;")
+            return combo
+        else:
+            editor = super().createEditor(parent, option, index)
+            editor.setStyleSheet("color: #043927;")
+            return editor
+    
+    def setEditorData(self, editor, index):
+        if isinstance(editor, QComboBox):
+            value = index.model().data(index, Qt.ItemDataRole.EditRole)
+            idx = editor.findText(value)
+            if idx >= 0:
+                editor.setCurrentIndex(idx)
+        else:
+            super().setEditorData(editor, index)
+
+    def setModelData(self, editor, model, index):
+        if isinstance(editor, QComboBox):
+            model.setData(index, editor.currentText(), Qt.ItemDataRole.EditRole)
+        else:
+            super().setModelData(editor, model, index)
+
 
 def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
     """Creates Edit and Delete buttons for a row."""
@@ -96,7 +128,18 @@ def check_existence_in_csv(csv_file, column_name, value, exclude_index=None):
                     continue
                 return True
     return False  # No duplicates found
-    
+
+def load_college_codes():
+    """Loads all unique program codes from the programs.csv file."""
+    codes = []
+    with open(COLLEGES_FILE, "r", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            code = row["College Code"].strip()
+            if code not in codes:
+                codes.append(code)
+    return codes
+
 def save_edited_row(row_idx, tableWidget, main_window=None):
     """Saves the edited row and updates the CSV file."""
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
@@ -104,36 +147,36 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         HEADERS = reader.fieldnames
         data = list(reader)
 
-    # Old values (originally stored in the table)
     old_program_code = data[row_idx]["Program Code"] 
-    old_college_code = data[row_idx]["College Code"] 
 
-    # Get new values from the table
-    updated_values = {HEADERS[col_idx]: tableWidget.item(row_idx, col_idx).text().strip() for col_idx in range(len(HEADERS))}
-    new_program_code = updated_values["Program Code"]
-    new_college_code = updated_values["College Code"]
+    # Extract edited row data
+    row_data = {HEADERS[col_idx]: tableWidget.item(row_idx, col_idx).text().strip() for col_idx in range(len(HEADERS))}
 
-    #validate constraints
-    error_msg = validate_constraints(updated_values, row_index=row_idx, is_edit=True)
+    # Check if any cell is empty
+    for header, value in row_data.items():
+        if value == "":
+            QMessageBox.warning(None, "Input Error", f"The field '{header}' cannot be empty.")
+            return
+        
+    # Validate constraints
+    error_msg = validate_constraints(row_data, row_index=row_idx, is_edit=True)
     if error_msg:
         QMessageBox.warning(None, "Validation Error", error_msg)
         return
 
-    if not new_program_code or not new_college_code:
-        QMessageBox.warning(None, "Error", "Program Code and College Code cannot be empty.")
-        return
-
-    # Search for the matching row
-    data[row_idx] = updated_values
+    # Update row with validated values
+    for col_idx, header in enumerate(HEADERS):
+        item = tableWidget.item(row_idx, col_idx)
+        if item:
+            data[row_idx][header] = row_data[header]
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            item.setBackground(QBrush(Qt.GlobalColor.transparent))
 
     # Write back to CSV
     with open(CSV_FILE, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)
         writer.writeheader()
         writer.writerows(data)
-
-    # Update students.csv if Program Code or College Code changed
-    update_students_program(old_program_code, new_program_code, old_college_code, new_college_code)
 
     QMessageBox.information(None, "Success", "Program updated successfully!")
 
@@ -146,16 +189,14 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
     tableWidget.setItemDelegateForRow(row_idx, None)
     create_edit_delete_buttons(row_idx, tableWidget, main_window)
 
-    # Refresh students table
-    if main_window and hasattr(main_window.ui, 'tableWidget'):
-        main_window.ui.tableWidget.clearContents()
-        main_window.ui.tableWidget.setRowCount(0)
-        loadStudents(main_window.ui.tableWidget)
+    update_students_program(old_program_code, row_data["Program Code"])
+
+    from studentsData import loadStudents
+    loadStudents(main_window.ui.tableWidget)
 
 
 
-def update_students_program(old_program_code, new_program_code, old_college_code, new_college_code):
-    """Updates the Program Code and College Code in students.csv and the table widget."""
+def update_students_program(old_program_code, new_program_code):
     with open("students.csv", "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         HEADERS = reader.fieldnames
@@ -163,18 +204,24 @@ def update_students_program(old_program_code, new_program_code, old_college_code
 
     for row in data:
         if row["Program Code"] == old_program_code:
-            row["Program Code"] = new_program_code  # Update program code
+            row["Program Code"] = new_program_code  
 
     with open("students.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)
         writer.writeheader()
         writer.writerows(data)
 
-    
+
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
     column_count = tableWidget.columnCount()
-    delegate = EditDelegate(tableWidget)
+    headers = []
+    for col_idx in range(column_count - 1):
+        item = tableWidget.horizontalHeaderItem(col_idx)
+        headers.append(item.text() if item else "")
+
+    college_codes = load_college_codes()
+    delegate = EditDelegate(tableWidget, headers=headers, college_codes=college_codes)
     tableWidget.setItemDelegateForRow(row_idx, delegate)
 
     original_values = [tableWidget.item(row_idx, col_idx).text() if tableWidget.item(row_idx, col_idx) else "" 
@@ -232,9 +279,8 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
             for col_idx in range(column_count - 1):
                 item = tableWidget.item(row_idx, col_idx)
                 if item:
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing
-                    item.setBackground(QBrush(Qt.GlobalColor.white))  # Reset background
-                    item.setForeground(QBrush(Qt.GlobalColor.black))  # Reset text color
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    item.setBackground(QBrush(Qt.GlobalColor.transparent))
 
             # Restore Edit/Delete buttons
             create_edit_delete_buttons(row_idx, tableWidget, main_window)
@@ -246,7 +292,7 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
     tableWidget.setCellWidget(row_idx, column_count - 1, actions)
 
 
-def delete_program(row_idx, tableWidget, main_window=None):
+def delete_program(row_idx, tableWidget, main_window):
     """Deletes a program and updates students' program code to 'N/A'."""
     
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
@@ -273,17 +319,19 @@ def delete_program(row_idx, tableWidget, main_window=None):
         writer.writerows(data)
 
     # Update students.csv (set Program Code to "N/A")
-    update_students_program(program_code)
+    null_students_program(program_code)
 
     QMessageBox.information(None, "Success", "Program deleted. Students' records updated.")
 
+    from programsData import loadPrograms
+    loadPrograms(main_window.ui.tableWidget_2, main_window)
+    
+    from studentsData import loadStudents
+    loadStudents(main_window.ui.tableWidget, main_window)
 
-    programsData.loadPrograms(tableWidget, main_window)
-    loadStudents(main_window.ui.tableWidget)
 
-
-def update_students_program(old_program_code, new_program_code=None, old_college_code=None, new_college_code=None):
-    """Updates the Program Code and College Code in students.csv when a program is edited."""
+def null_students_program(old_program_code):
+    """Updates the Program Code in students.csv when a program is edited."""
     with open("students.csv", "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         HEADERS = reader.fieldnames
@@ -291,10 +339,7 @@ def update_students_program(old_program_code, new_program_code=None, old_college
 
     for row in data:
         if row["Program Code"] == old_program_code:
-            if new_program_code is None:  # If deleting, set program to "N/A"
-                row["Program Code"] = "N/A"
-            else:
-                row["Program Code"] = new_program_code
+           row["Program Code"] = "N/A"
 
     with open("students.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)

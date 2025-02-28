@@ -5,7 +5,7 @@ from editCollege import create_edit_delete_buttons
 
 CSV_FILE = "colleges.csv"
 
-def loadColleges(tableWidget, main_window=None):
+def loadColleges(tableWidget, main_window):
 
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)  # Read CSV as dictionaries

@@ -2,7 +2,7 @@ import csv
 import re
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor, QBrush, QPainter, QPen
-from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QStyledItemDelegate, QTableWidgetItem
+from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QStyledItemDelegate, QCompleter, QComboBox
 import studentsData
 
 CSV_FILE = "students.csv"
@@ -11,7 +11,13 @@ EDIT_MODE_COLOR = QColor("#FFF3CD")  #  edit mode
 DEFAULT_COLOR = QColor("#FFFFFF")  # normal state
 
 class EditDelegate(QStyledItemDelegate):
-    """Custom delegate to enforce font color during editing."""
+    def __init__(self, parent=None, headers=None, program_codes=None):
+        super().__init__(parent)
+        self.headers = headers or []
+        self.program_codes = program_codes or []
+        self.gender_options = ["Male", "Female"]
+        self.year_levels = [str(i) for i in range(1, 8)]
+
     def paint(self, painter: QPainter, option, index):
         painter.save()
         painter.setPen(QPen(QColor("#043927")))  # Set font color to #043927
@@ -19,9 +25,53 @@ class EditDelegate(QStyledItemDelegate):
         painter.restore()
 
     def createEditor(self, parent, option, index):
-        editor = super().createEditor(parent, option, index)
-        editor.setStyleSheet("color: #043927;")  # Ensure text color stays #043927
-        return editor
+        column = index.column()
+        column_name = self.headers[column] if column < len(self.headers) else ""
+
+        if column_name == "Program Code":
+            combo = QComboBox(parent)
+            combo.setEditable(True)
+            combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+            combo.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            combo.addItems(self.program_codes)
+            combo.setStyleSheet("color: #043927;")
+            return combo
+        elif column_name == "Gender":
+            combo = QComboBox(parent)
+            combo.setEditable(True)
+            combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+            combo.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            combo.addItems(self.gender_options)
+            combo.setStyleSheet("color: #043927;")
+            return combo
+
+        elif column_name == "Year Level":
+            combo = QComboBox(parent)
+            combo.setEditable(True)
+            combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+            combo.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            combo.addItems(self.year_levels)
+            combo.setStyleSheet("color: #043927;")
+            return combo
+        else:
+            editor = super().createEditor(parent, option, index)
+            editor.setStyleSheet("color: #043927;")
+            return editor
+
+    def setEditorData(self, editor, index):
+        if isinstance(editor, QComboBox):
+            value = index.model().data(index, Qt.ItemDataRole.EditRole)
+            idx = editor.findText(value)
+            if idx >= 0:
+                editor.setCurrentIndex(idx)
+        else:
+            super().setEditorData(editor, index)
+
+    def setModelData(self, editor, model, index):
+        if isinstance(editor, QComboBox):
+            model.setData(index, editor.currentText(), Qt.ItemDataRole.EditRole)
+        else:
+            super().setModelData(editor, model, index)
 
 def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
     """Creates Edit and Delete buttons for a row."""
@@ -128,9 +178,20 @@ def check_program_under_college(csv_file, college_code, program_code):
                 return True
     return False
 
+def load_program_codes():
+    """Loads all unique program codes from the programs.csv file."""
+    codes = []
+    with open(PROGRAMS_FILE, "r", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            code = row["Program Code"].strip()
+            if code not in codes:
+                codes.append(code)
+    return codes
+
+
 def save_edited_row(row_idx, tableWidget, main_window=None):
     """Saves the edited row and updates the CSV file with validation."""
-    
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         HEADERS = reader.fieldnames
@@ -139,8 +200,14 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
     # Extract edited row data
     row_data = {HEADERS[col_idx]: tableWidget.item(row_idx, col_idx).text().strip() for col_idx in range(len(HEADERS))}
 
+    # Check if any cell is empty
+    for header, value in row_data.items():
+        if value == "":
+            QMessageBox.warning(None, "Input Error", f"The field '{header}' cannot be empty.")
+            return
+
+
     # Validate constraints
-    
     error_message = validate_constraints(row_data, row_index=row_idx, is_edit=True)
     if error_message:
         QMessageBox.warning(None, "Validation Error", error_message)
@@ -152,7 +219,7 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         if item:
             data[row_idx][header] = row_data[header]
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            item.setBackground(DEFAULT_COLOR)
+            item.setBackground(QBrush(Qt.GlobalColor.transparent))
 
     # Write updated data back to CSV
     with open(CSV_FILE, "w", newline="", encoding="utf-8-sig") as file:
@@ -173,7 +240,13 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
     column_count = tableWidget.columnCount()
-    delegate = EditDelegate(tableWidget)
+    headers = []
+    for col_idx in range(column_count - 1):
+        item = tableWidget.horizontalHeaderItem(col_idx)
+        headers.append(item.text() if item else "")
+
+    program_codes = load_program_codes()
+    delegate = EditDelegate(tableWidget, headers=headers, program_codes=program_codes)
     tableWidget.setItemDelegateForRow(row_idx, delegate)
 
     original_values = [tableWidget.item(row_idx, col_idx).text() if tableWidget.item(row_idx, col_idx) else "" 
@@ -231,9 +304,8 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
             for col_idx in range(column_count - 1):
                 item = tableWidget.item(row_idx, col_idx)
                 if item:
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing
-                    item.setBackground(QBrush(Qt.GlobalColor.white))  # Reset background
-                    item.setForeground(QBrush(Qt.GlobalColor.black))  # Reset text color
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    item.setBackground(QBrush(Qt.GlobalColor.transparent))
 
             # Restore Edit/Delete buttons
             create_edit_delete_buttons(row_idx, tableWidget, main_window)

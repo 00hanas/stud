@@ -3,12 +3,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QTableWidgetItem
 from editStudent import create_edit_delete_buttons
 
-def loadStudents(tableWidget, main_window=None):
-    CSV_FILE = "students.csv"
+CSV_FILE = "students.csv"
 
-    # Clear the table before reloading
-    tableWidget.clearContents()
-    tableWidget.setRowCount(0)
+def loadStudents(tableWidget, main_window=None):
 
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)  # Read CSV as dictionaries
@@ -18,9 +15,8 @@ def loadStudents(tableWidget, main_window=None):
         tableWidget.setColumnCount(len(HEADERS) + 1)  
         tableWidget.setHorizontalHeaderLabels(HEADERS + ["Actions"])
         tableWidget.horizontalHeader().setVisible(True)
-        
 
-        if data:  # Ensure file is not empty
+        if data:  
             tableWidget.setRowCount(len(data))  
 
             for row_idx, row_data in enumerate(data):  # Iterate over rows
