@@ -75,19 +75,16 @@ class MainApp(QMainWindow):
 
     def show_addui(self):
         self.add_student_window = AddStudentForm(self)
-        self.add_student_window.show()
-
-    def show_addprogramui(self):
-        self.add_program_window = AddProgramForm(self)
-        self.add_program_window.show()
-        if self.add_program_window.exec():  # Wait for dialog to close
-            loadPrograms(self.ui.tableWidget_2)  # Reload programs
-    
+        if self.add_student_window.exec():
+            loadStudents(self.ui.tableWidget, self)
     def show_addcollegeui(self):
         self.add_college_window = AddCollegeForm(self)
-        self.add_college_window.show()
         if self.add_college_window.exec():  # Wait for dialog to close
-            loadColleges(self.ui.tableWidget_3)  # Reload programs
+            loadColleges(self.ui.tableWidget_3, self)  # Reload colleges
+    def show_addprogramui(self):
+        self.add_program_window = AddProgramForm(self)
+        if self.add_program_window.exec():  # Wait for dialog to close
+            loadPrograms(self.ui.tableWidget_2, self)  # Reload programs # Reload programs
     
     def apply_sort(self):
         

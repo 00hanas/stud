@@ -23,11 +23,11 @@ class AddCollegeForm(QDialog):
         file_exists = os.path.isfile(csv_file)
 
         if check_existence_in_csv(csv_file, "College Code", college_code):
-            QMessageBox.warning(self, "Duplicate College Code", f"College Code: {college_code} already exists!", QMessageBox.StandardButton.Ok)
+            QMessageBox.warning(None, "Duplicate College Code", f"College Code: {college_code} already exists!", QMessageBox.StandardButton.Ok)
             return
 
         if not college_code or not college_name:
-            QMessageBox.warning(self, "Input Error", "Please fill in all required fields.")
+            QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
             return
 
         with open(csv_file, "a", newline="\n") as file:
@@ -36,7 +36,7 @@ class AddCollegeForm(QDialog):
                 writer.writerow(["College Code", "College Name"])  
             writer.writerow([college_code, college_name])
 
-        QMessageBox.information(self, "Success", "College added successfully!")
+        QMessageBox.information(None, "Success", "College added successfully!")
 
         self.accept()  # Close dialog properly
 
