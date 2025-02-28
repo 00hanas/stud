@@ -103,7 +103,7 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         writer.writerows(data)
     
     # Update related files (students.csv and programs.csv)
-    update_related_files(old_college_code, new_college_code)
+    update_programs_file(old_college_code, new_college_code)
 
     QMessageBox.information(None, "Success", "College updated successfully!")
 
@@ -122,23 +122,27 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         loadStudents(main_window.ui.tableWidget)  # Reload students
         loadPrograms(main_window.ui.tableWidget_2)  # Reload programs 
 
-def update_related_files(old_college_code, new_college_code):
-    """Updates college code in programs.csv and students.csv."""
-    for file_name in ["programs.csv", "students.csv"]:
-        with open(file_name, "r", encoding="utf-8-sig") as file:
-            reader = csv.DictReader(file)
-            headers = reader.fieldnames
-            data = list(reader)
+import csv
 
-        # Update records
-        for row in data:
-            if row["College Code"] == old_college_code:
-                row["College Code"] = new_college_code
+def update_programs_file(old_college_code, new_college_code):
+    """Updates college code in programs.csv."""
+    file_name = "programs.csv"
+    
+    with open(file_name, "r", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        headers = reader.fieldnames
+        data = list(reader)
 
-        with open(file_name, "w", newline="", encoding="utf-8-sig") as file:
-            writer = csv.DictWriter(file, fieldnames=headers)
-            writer.writeheader()
-            writer.writerows(data)
+    # Update records only in programs.csv
+    for row in data:
+        if row["College Code"] == old_college_code:
+            row["College Code"] = new_college_code
+
+    with open(file_name, "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(data)
+
 
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
@@ -200,7 +204,7 @@ def delete_college(row_idx, tableWidget, main_window=None):
     college_code = data[row_idx]["College Code"]
 
     confirm = QMessageBox.question(None, "Confirm Delete", 
-        f"Are you sure you want to delete this college? Programs will be removed, and students' College Code will be set to 'N/A'.",
+        f"Are you sure you want to delete this college? Programs will be removed, and students' Program Code will be set to 'N/A'.",
         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
     if confirm == QMessageBox.StandardButton.No:
@@ -229,12 +233,20 @@ def delete_college(row_idx, tableWidget, main_window=None):
 
 def delete_related_programs_and_update_students(college_code):
     """Deletes programs related to the deleted college and updates students' records to 'N/A'."""
+
+    deleted_program_codes = []
     
     # Remove related programs
     with open("programs.csv", "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         headers = reader.fieldnames
-        programs = [row for row in reader if row["College Code"] != college_code]
+        programs = []
+        
+        for row in reader:
+            if row["College Code"] == college_code:
+                deleted_program_codes.append(row["Program Code"])
+            else:
+                programs.append(row)
 
     with open("programs.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=headers)
@@ -248,8 +260,7 @@ def delete_related_programs_and_update_students(college_code):
         students = []
 
         for row in reader:
-            if row["College Code"] == college_code:
-                row["College Code"] = "N/A"
+            if row["Program Code"] in deleted_program_codes:
                 row["Program Code"] = "N/A"
             students.append(row)
 

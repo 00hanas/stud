@@ -79,11 +79,7 @@ def validate_constraints(row_data):
     id_number = row_data.get("ID Number", "").strip()
     gender = row_data.get("Gender", "").strip().capitalize()
     year_level = row_data.get("Year Level", "").strip()
-    college_code = row_data.get("College Code", "").strip().upper()
     program_code = row_data.get("Program Code", "").strip().upper()
-
-    if college_code == "N/A" and program_code == "N/A":
-        return None  # No validation errors
 
     # Validate ID Number format: XXXX-XXXX (e.g., 2024-0001)
     if not re.match(r"^\d{4}-\d{4}$", id_number):
@@ -96,14 +92,10 @@ def validate_constraints(row_data):
     # Validate Year Level: Must be between 1 and 7
     if not year_level.isdigit() or not (1 <= int(year_level) <= 7):
         return f"Invalid Year Level: {year_level}. Must be between 1 and 7."
-
-    # Validate College Code: Must exist in colleges.csv
-    if college_code != "N/A" and not check_existence_in_csv(COLLEGES_FILE, "College Code", college_code):
-        return f"College Code '{college_code}' does not exist. Please add it on College Page."
-
-    # Validate Program Code: Must exist in programs.csv under the given College Code
-    if program_code != "N/A" and not check_program_under_college(PROGRAMS_FILE, college_code, program_code):
-        return f"Program Code '{program_code}' does not exist under College '{college_code}'. Please add it on Program Page."
+    
+    # Validate Program Code: Must exist in programs.csv
+    if not check_existence_in_csv(PROGRAMS_FILE, "Program Code", program_code):
+        return f"Invalid Program Code: {program_code}. Program does not exist. Add it on the Program Page."
 
     return None  # No validation errors
 

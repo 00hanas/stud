@@ -152,7 +152,6 @@ def update_students_program(old_program_code, new_program_code, old_college_code
     for row in data:
         if row["Program Code"] == old_program_code:
             row["Program Code"] = new_program_code  # Update program code
-            row["College Code"] = new_college_code  # Update college code if changed
 
     with open("students.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)
@@ -263,7 +262,6 @@ def update_students_program(old_program_code, new_program_code=None, old_college
                 row["Program Code"] = "N/A"
             else:
                 row["Program Code"] = new_program_code
-                row["College Code"] = new_college_code
 
     with open("students.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=HEADERS)

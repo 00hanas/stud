@@ -15,3 +15,14 @@ def load_programs():
                 programs_by_college[college_code].append(program_code)  # Store only program codes
     
     return programs_by_college
+
+def loadprograms():
+    program_codes = []
+    with open("programs.csv", mode="r", newline="") as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip header
+        for row in reader:
+            if len(row) >= 2:  # Ensure valid row
+                program_code = row[0].strip()  # Extract only college code
+                program_codes.append(program_code)  # Append to list
+    return program_codes

@@ -128,7 +128,7 @@ class Ui_MainWindow(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
-        self.comboBox.addItem("")
+
         self.horizontalLayout.addWidget(self.comboBox)
         spacerItem2 = QtWidgets.QSpacerItem(5, 20, QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Minimum)
         self.horizontalLayout.addItem(spacerItem2)
@@ -258,7 +258,6 @@ class Ui_MainWindow(object):
                 }
         """)
         self.comboBox_2.setObjectName("comboBox_2")
-        self.comboBox_2.addItem("")
         self.comboBox_2.addItem("")
         self.comboBox_2.addItem("")
         self.comboBox_2.addItem("")
@@ -873,7 +872,6 @@ QHeaderView::section {
         self.comboBox.setItemText(4, _translate("MainWindow", "Year Level"))
         self.comboBox.setItemText(5, _translate("MainWindow", "Gender"))
         self.comboBox.setItemText(6, _translate("MainWindow", "Program Code"))
-        self.comboBox.setItemText(7, _translate("MainWindow", "College Code"))
         self.pushButton_2.setText(_translate("MainWindow", "Students"))
         self.pushButton_3.setText(_translate("MainWindow", "Programs"))
         self.pushButton_4.setText(_translate("MainWindow", "Colleges"))
@@ -887,7 +885,6 @@ QHeaderView::section {
         self.comboBox_2.setItemText(4, _translate("MainWindow", "Year Level"))
         self.comboBox_2.setItemText(5, _translate("MainWindow", "Gender"))
         self.comboBox_2.setItemText(6, _translate("MainWindow", "Program Code"))
-        self.comboBox_2.setItemText(7, _translate("MainWindow", "College Code"))
         self.comboBox_3.setItemText(0, _translate("MainWindow", "Order:"))
         self.comboBox_3.setItemText(1, _translate("MainWindow", "Ascending"))
         self.comboBox_3.setItemText(2, _translate("MainWindow", "Descending"))
