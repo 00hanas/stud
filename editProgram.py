@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon, QColor, QBrush, QPainter, QPen
 from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QTableWidgetItem, QStyledItemDelegate
 from studentsData import loadStudents
+import programsData
 
 CSV_FILE = "programs.csv"
 EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
@@ -70,17 +71,31 @@ def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
 
 import re
 COLLEGES_FILE = "colleges.csv"
-def validate_constraints(row_data):
+PROGRAMS_FILE = "programs.csv"
+def validate_constraints(row_data, row_index=None, is_edit=False):
     college_code = row_data.get("College Code", "").strip().upper()
+    program_code = row_data.get("Program Code", "").strip().upper()
+
+    #Program Code must not duplicate
+    if not is_edit or (is_edit and row_index is not None):
+        if check_existence_in_csv(PROGRAMS_FILE, "Program Code", program_code, exclude_index=row_index):
+            return f"Program Code '{program_code}' already exists. Please choose a different one."
 
     if not check_existence_in_csv(COLLEGES_FILE, "College Code", college_code):
         return f"College Code '{college_code}' does not exist. Please add it on College Page."
 
-def check_existence_in_csv(csv_file, column_name, value):
+def check_existence_in_csv(csv_file, column_name, value, exclude_index=None):
     """Checks if a given value exists in a specific column of a CSV file."""
     with open(csv_file, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
-        return any(row[column_name].strip().upper() == value for row in reader)
+        value = value.strip().upper()
+        for idx, row in enumerate(reader):  # Track row index
+            cell_value = row[column_name].strip().upper()
+            if cell_value == value:
+                if exclude_index is not None and idx == exclude_index:
+                    continue
+                return True
+    return False  # No duplicates found
     
 def save_edited_row(row_idx, tableWidget, main_window=None):
     """Saves the edited row and updates the CSV file."""
@@ -99,7 +114,7 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
     new_college_code = updated_values["College Code"]
 
     #validate constraints
-    error_msg = validate_constraints(updated_values)
+    error_msg = validate_constraints(updated_values, row_index=row_idx, is_edit=True)
     if error_msg:
         QMessageBox.warning(None, "Validation Error", error_msg)
         return
@@ -127,7 +142,6 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         item = tableWidget.item(row_idx, col_idx)
         if item:
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            item.setBackground(DEFAULT_COLOR)
 
     tableWidget.setItemDelegateForRow(row_idx, None)
     create_edit_delete_buttons(row_idx, tableWidget, main_window)
@@ -138,8 +152,6 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         main_window.ui.tableWidget.setRowCount(0)
         loadStudents(main_window.ui.tableWidget)
 
-
-  # Reload students table
 
 
 def update_students_program(old_program_code, new_program_code, old_college_code, new_college_code):
@@ -161,30 +173,21 @@ def update_students_program(old_program_code, new_program_code, old_college_code
     
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
-
-    
     column_count = tableWidget.columnCount()
-
     delegate = EditDelegate(tableWidget)
     tableWidget.setItemDelegateForRow(row_idx, delegate)
+
+    original_values = [tableWidget.item(row_idx, col_idx).text() if tableWidget.item(row_idx, col_idx) else "" 
+                       for col_idx in range(column_count - 1)]
     
     # Make cells editable
-    for i in range(tableWidget.rowCount()):
-        if i == row_idx:
-            for col_idx in range(column_count - 1):
-                item = tableWidget.item(i, col_idx)
-                if item:
-                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)  # Enable editing
-                    item.setBackground(EDIT_MODE_COLOR)  
-                    item.setForeground(QBrush(QColor("#043927")))  
-        else:
-            # Disable editing for other rows
-            for col_idx in range(column_count - 1):
-                item = tableWidget.item(i, col_idx)
-                if item:
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    item.setBackground(DEFAULT_COLOR)  
-
+    for col_idx in range(column_count - 1):
+        item = tableWidget.item(row_idx, col_idx)
+        if item:
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable) # Enable editing
+            item.setBackground(EDIT_MODE_COLOR)  
+            item.setForeground(QBrush(QColor("#043927")))
+    
     # Replace Edit/Delete buttons with Save button
     actions = QWidget()
     layout = QHBoxLayout()
@@ -206,7 +209,37 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
         background-color: #065f46;
     }
 """)
-    saveButton.clicked.connect(lambda _, idx=row_idx: save_edited_row(idx, tableWidget, main_window))
+    
+    def save_or_cancel():
+        """Ask user for confirmation before saving or canceling edits."""
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle("Confirm Edit")
+        msgBox.setText("Do you want to save the changes?")
+        msgBox.setIcon(QMessageBox.Icon.Question)
+        msgBox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msgBox.setDefaultButton(QMessageBox.StandardButton.Yes)
+        
+        result = msgBox.exec()
+
+        if result == QMessageBox.StandardButton.Yes:
+            save_edited_row(row_idx, tableWidget, main_window)  # Save changes
+        else:
+            # Restore original values
+            for col_idx in range(column_count - 1):
+                tableWidget.item(row_idx, col_idx).setText(original_values[col_idx])
+            
+            # Reset cell formatting
+            for col_idx in range(column_count - 1):
+                item = tableWidget.item(row_idx, col_idx)
+                if item:
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing
+                    item.setBackground(QBrush(Qt.GlobalColor.white))  # Reset background
+                    item.setForeground(QBrush(Qt.GlobalColor.black))  # Reset text color
+
+            # Restore Edit/Delete buttons
+            create_edit_delete_buttons(row_idx, tableWidget, main_window)
+            
+    saveButton.clicked.connect(save_or_cancel)
     layout.addWidget(saveButton)
 
     actions.setLayout(layout)
@@ -215,10 +248,12 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
 
 def delete_program(row_idx, tableWidget, main_window=None):
     """Deletes a program and updates students' program code to 'N/A'."""
+    
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         HEADERS = reader.fieldnames
         data = list(reader)
+    
 
     program_code = data[row_idx]["Program Code"]
 
@@ -241,12 +276,10 @@ def delete_program(row_idx, tableWidget, main_window=None):
     update_students_program(program_code)
 
     QMessageBox.information(None, "Success", "Program deleted. Students' records updated.")
-    tableWidget.removeRow(row_idx)
 
-    if main_window and hasattr(main_window.ui, 'tableWidget'):
-        main_window.ui.tableWidget.clearContents()
-        main_window.ui.tableWidget.setRowCount(0)
-        loadStudents(main_window.ui.tableWidget)
+
+    programsData.loadPrograms(tableWidget, main_window)
+    loadStudents(main_window.ui.tableWidget)
 
 
 def update_students_program(old_program_code, new_program_code=None, old_college_code=None, new_college_code=None):

@@ -4,6 +4,8 @@ from PyQt6.QtGui import QIcon, QColor, QBrush, QPainter, QPen
 from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QMessageBox, QTableWidgetItem, QStyledItemDelegate
 from studentsData import loadStudents
 from programsData import loadPrograms
+from editStudent import check_existence_in_csv
+import collegesData
 
 CSV_FILE = "colleges.csv"
 EDIT_MODE_COLOR = QColor("#FFF3CD")  # edit mode
@@ -23,6 +25,7 @@ class EditDelegate(QStyledItemDelegate):
         return editor
 
 def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
+    
     """Creates Edit and Delete buttons for a row."""
     actions = QWidget()
     layout = QHBoxLayout()
@@ -72,6 +75,14 @@ def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
     tableWidget.setCellWidget(row_idx, column_count - 1, actions)  # Place in last column
     tableWidget.setColumnWidth(column_count - 1, 120)
 
+def validate_constraints(row_data, row_index=None, is_edit=False):
+    college_code = row_data.get("College Code", "").strip().upper()
+
+    #No duplicates of College Code
+    if not is_edit or (is_edit and row_index is not None):
+        if check_existence_in_csv(CSV_FILE, "College Code", college_code, exclude_index=row_index):
+            return f"Duplicate College Code: {college_code}. Must be unique."
+
 def save_edited_row(row_idx, tableWidget, main_window=None):
     """Saves the edited row and updates the colleges.csv file."""
     # Read the current table data
@@ -93,6 +104,12 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
         QMessageBox.warning(None, "Error", "College Code cannot be empty!")
         return
 
+    # Validate constraints
+    error_message = validate_constraints(updated_row, row_index=row_idx, is_edit=True)
+    if error_message:
+        QMessageBox.warning(None, "Validation Error", error_message)
+        return
+
     # Update the correct row in data
     data[row_idx] = updated_row
 
@@ -107,12 +124,11 @@ def save_edited_row(row_idx, tableWidget, main_window=None):
 
     QMessageBox.information(None, "Success", "College updated successfully!")
 
-    # **Disable edit mode and restore buttons**
+    # Disable editing and restore Edit/Delete buttons
     for col_idx in range(len(HEADERS)):
         item = tableWidget.item(row_idx, col_idx)
         if item:
-            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing
-            item.setBackground(DEFAULT_COLOR)  # Restore background color
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing 
 
     tableWidget.setItemDelegateForRow(row_idx, None)  # Remove custom edit delegate
     # Restore Edit/Delete buttons
@@ -147,9 +163,11 @@ def update_programs_file(old_college_code, new_college_code):
 def enable_edit_mode(row_idx, tableWidget, main_window=None):
     """Switches a row to edit mode (hides Edit/Delete, shows Save)."""
     column_count = tableWidget.columnCount()
-
     delegate = EditDelegate(tableWidget)
     tableWidget.setItemDelegateForRow(row_idx, delegate)
+
+    original_values = [tableWidget.item(row_idx, col_idx).text() if tableWidget.item(row_idx, col_idx) else "" 
+                       for col_idx in range(column_count - 1)]
     
     # Make cells editable
     for col_idx in range(column_count - 1):
@@ -180,9 +198,37 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
         background-color: #065f46;
     }
 """)
+    
+    def save_or_cancel():
+        """Ask user for confirmation before saving or canceling edits."""
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle("Confirm Edit")
+        msgBox.setText("Do you want to save the changes?")
+        msgBox.setIcon(QMessageBox.Icon.Question)
+        msgBox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msgBox.setDefaultButton(QMessageBox.StandardButton.Yes)
+        
+        result = msgBox.exec()
 
-    saveButton.clicked.connect(lambda _, idx=row_idx, mw=main_window: 
-    save_edited_row(idx, tableWidget, mw)) #debug
+        if result == QMessageBox.StandardButton.Yes:
+            save_edited_row(row_idx, tableWidget, main_window)  # Save changes
+        else:
+            # Restore original values
+            for col_idx in range(column_count - 1):
+                tableWidget.item(row_idx, col_idx).setText(original_values[col_idx])
+            
+            # Reset cell formatting
+            for col_idx in range(column_count - 1):
+                item = tableWidget.item(row_idx, col_idx)
+                if item:
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Disable editing
+                    item.setBackground(QBrush(QColor("#E3E8E3")))  # Reset background
+
+            # Restore Edit/Delete buttons
+            create_edit_delete_buttons(row_idx, tableWidget, main_window)
+
+    saveButton.clicked.connect(save_or_cancel)
+    layout.addWidget(saveButton) 
 
     layout.addWidget(saveButton)
 
@@ -197,9 +243,6 @@ def delete_college(row_idx, tableWidget, main_window=None):
         HEADERS = reader.fieldnames
         data = list(reader)
 
-    if row_idx >= len(data):  # Ensure valid index
-        QMessageBox.warning(None, "Error", "Invalid row selection.")
-        return
 
     college_code = data[row_idx]["College Code"]
 
@@ -223,13 +266,9 @@ def delete_college(row_idx, tableWidget, main_window=None):
 
     QMessageBox.information(None, "Success", "College deleted. Students' records updated.")
 
-    # **Fix: Remove row from table**
-    tableWidget.removeRow(row_idx)
-
-    # **Fix: Refresh table after deletion**
-    if main_window and hasattr(main_window.ui, 'tableWidget'):
-        loadStudents(main_window.ui.tableWidget)  # Reload students
-        loadPrograms(main_window.ui.tableWidget_2)  # Reload programs 
+    collegesData.loadColleges(tableWidget, main_window)  # Reload colleges
+    loadStudents(main_window.ui.tableWidget)  # Reload students
+    loadPrograms(main_window.ui.tableWidget_2)  # Reload programs 
 
 def delete_related_programs_and_update_students(college_code):
     """Deletes programs related to the deleted college and updates students' records to 'N/A'."""

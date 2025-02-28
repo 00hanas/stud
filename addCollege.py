@@ -3,6 +3,7 @@ from addcollegeui import Ui_CollegeForm
 from collegesData import loadColleges
 import csv
 import os
+from editStudent import check_existence_in_csv
 
 class AddCollegeForm(QDialog):
     def __init__(self, parent=None):
@@ -16,13 +17,17 @@ class AddCollegeForm(QDialog):
     def save_college(self):
         college_code = self.ui.lineEdit.text()
         college_name = self.ui.lineEdit_2.text()
+        
+        csv_file = "colleges.csv"
+        file_exists = os.path.isfile(csv_file)
+
+        if check_existence_in_csv(csv_file, "College Code", college_code):
+            QMessageBox.warning(None, "Duplicate College Code", f"College Code: {college_code} already exists!", QMessageBox.StandardButton.Ok)
+            return
 
         if not college_code or not college_name:
             QMessageBox.warning(None, "Input Error", "Please fill in all required fields.")
             return
-        
-        csv_file = "colleges.csv"
-        file_exists = os.path.isfile(csv_file)
 
         with open(csv_file, "a", newline="\n") as file:
             writer = csv.writer(file)

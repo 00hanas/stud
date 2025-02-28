@@ -6,6 +6,7 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 from studentsData import loadStudents
 from programcode import loadprograms
+from editStudent  import check_existence_in_csv
 
 class CustomDialog(QDialog):
     """A custom dialog for displaying messages."""
@@ -54,7 +55,6 @@ class AddStudentForm(QWidget):
         programCode = loadprograms()
         self.ui.comboBox_4.addItems(programCode)
 
-
     def save_student(self):
         """Collects student data and saves it to a CSV file."""
         # Get user inputs
@@ -63,10 +63,15 @@ class AddStudentForm(QWidget):
         student_id = self.ui.lineEdit_3.text().strip()
 
         if not student_id:
-            self.show_message("Input Error", "Student ID is required.", QMessageBox.Icon.Warning)
+            QMessageBox.warning(None, "Input Error", "Student ID is required.")
             return
         if not self.ui.lineEdit_3.hasAcceptableInput():
-            self.show_message("Input Error", "Invalid ID format! Use XXXX-XXXX.", QMessageBox.Icon.Warning)
+            QMessageBox.warning(None, "Input Error", "Invalid ID format! Use XXXX-XXXX.")
+            return
+        
+        STUDENTS_FILE = "students.csv"
+        if check_existence_in_csv(STUDENTS_FILE, "ID Number", student_id):
+            QMessageBox.warning(None, "Duplicate ID", f"Student ID: {student_id} already exists!", QMessageBox.StandardButton.Ok)
             return
         
         year_level = self.ui.comboBox.currentText()
@@ -111,11 +116,3 @@ class AddStudentForm(QWidget):
             error_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")
             error_box.exec()  # Show error message
     
-    def show_message(self, title, message, icon):
-        """Reusable function to show message dialogs."""
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(icon)
-        msg_box.setWindowTitle(title)
-        msg_box.setText(message)
-        msg_box.setStyleSheet("background-color: #043927; color: white; border-radius: 5px; padding: 10px;")
-        msg_box.exec()
