@@ -31,7 +31,7 @@ def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
 
     # Edit button
     editButton = QPushButton()
-    editButton.setFixedSize(30, 25)
+    editButton.setFixedSize(20, 20)
     editButton.setIcon(QIcon("edit icon.png"))
     editButton.setStyleSheet("""
     QPushButton{
@@ -51,7 +51,7 @@ def create_edit_delete_buttons(row_idx, tableWidget, main_window=None):
 
     # Delete button
     deleteButton = QPushButton()
-    deleteButton.setFixedSize(30, 25)
+    deleteButton.setFixedSize(20, 20)
     deleteButton.setIcon(QIcon("delete icon.png"))
     deleteButton.setStyleSheet("""
     QPushButton{
@@ -163,10 +163,19 @@ def enable_edit_mode(row_idx, tableWidget, main_window=None):
 
     saveButton = QPushButton()
     saveButton.setIcon(QIcon("save icon.png"))
-    saveButton.setFixedSize(30, 25)
-    saveButton.setStyleSheet("background-color: #043927; border-radius: 5px;")
-    
-    print(f"Debug: enable_edit_mode() received main_window: {main_window}")
+    saveButton.setFixedSize(20, 20)
+    saveButton.setStyleSheet("""
+    QPushButton {
+        background-color: #043927;
+        border-radius: 5px;
+        border: none;
+        color: white;
+        padding: 5px;
+    }
+    QPushButton:hover {
+        background-color: #065f46;
+    }
+""")
 
     saveButton.clicked.connect(lambda _, idx=row_idx, mw=main_window: 
     save_edited_row(idx, tableWidget, mw)) #debug

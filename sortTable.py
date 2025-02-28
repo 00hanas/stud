@@ -6,7 +6,7 @@ def sort_table(tableWidget: QTableWidget, column_name: str, ascending: bool):
     # Get primary sort column index
     primary_col = get_column_index(tableWidget, column_name)
 
-    # Determine the correct secondary column for tie-breaking
+    # Determine the correct secondary column 
     possible_secondary_columns = ["First Name", "Program Code"]
     secondary_col = next((get_column_index(tableWidget, col) for col in possible_secondary_columns if get_column_index(tableWidget, col) is not None), None)
 

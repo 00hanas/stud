@@ -1,11 +1,7 @@
 import csv
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QTableWidgetItem
 from editStudent import create_edit_delete_buttons
-
-EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
-DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
 
 def loadStudents(tableWidget, main_window=None):
     CSV_FILE = "students.csv"
@@ -37,8 +33,7 @@ def loadStudents(tableWidget, main_window=None):
 
                 # Create Edit/Delete buttons
                 create_edit_delete_buttons(row_idx, tableWidget, main_window)
-
-    tableWidget.viewport().update()  
+ 
 
 
 

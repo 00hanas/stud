@@ -1,9 +1,6 @@
-from PyQt6.QtWidgets import QTableWidgetItem
+
 
 def search_table(table_widget, search_input, search_by_combobox):
-    """Filters table rows dynamically based on search input and selected column.
-       Updates the table in real-time based on input and dropdown selection.
-       If no rows match, it displays 'No result found'."""
     
     search_text = search_input.text().strip().lower()
     column_index = search_by_combobox.currentIndex() - 1  # Adjust for "Search By" default option

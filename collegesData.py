@@ -1,20 +1,15 @@
 import csv
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QTableWidgetItem
 from editCollege import create_edit_delete_buttons
 
 CSV_FILE = "colleges.csv"
-
-EDIT_MODE_COLOR = QColor("#FFF3CD")  # Light yellow for edit mode
-DEFAULT_COLOR = QColor("#FFFFFF")  # White for normal state
 
 def loadColleges(tableWidget, main_window=None):
 
     with open(CSV_FILE, "r", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)  # Read CSV as dictionaries
         HEADERS = reader.fieldnames
-        
         data = list(reader)  # Convert to a list of dictionaries
 
         tableWidget.setColumnCount(len(HEADERS) + 1)  

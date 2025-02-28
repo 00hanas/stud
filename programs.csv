@@ -1,8 +1,4 @@
 ﻿Program Code,Program Name,College Code
-BSCS,Bachelor of Science in Computer Science,CCS
-BSIT,Bachelor of Science in Information Technology,CCS
-BSIS,Bachelor of Science in Information Systems,CCS
-BSCA,Bachelor of Science in Computer Applications,CCS
 BSBotany,Bachelor of Science in Botany,CSM
 BSMarBio,Bachelor of Science in Marine Biology,CSM
 BSAnBio,Bachelor of Science in Animal Biology,CSM
@@ -10,22 +6,20 @@ BSChem,Bachelor of Science in Chemistry,CSM
 BSMth,Bachelor of Science in Mathematics,CSM
 BSStat,Bachelor of Science in Statistics,CSM
 BSPhy,Bachelor of Science in Physics,CSM
+BSBA,Bachelor of Science in Business Administration,CBA
+BSAcc,Bachelor of Science in Accountancy,CBA
+BSHRM,Bachelor of Science in Hotel and Restaurant Management,CBA
+BSMktg,Bachelor of Science in Marketing,CBA
+BSEconomics,Bachelor of Science in Economics,CBA
 BEED,Bachelor of Elementary Education,CED
 BSED,Bachelor of Secondary Education,CED
 BPEd,Bachelor of Physical Education,CED
-BSBA,Bachelor of Science in Business Administration,CEBA
-BSAcc,Bachelor of Science in Accountancy,CEBA
-BSHRM,Bachelor of Science in Hotel and Restaurant Management,CEBA
-BSMktg,Bachelor of Science in Marketing,CEBA
-BSEconomics,Bachelor of Science in Economics,CEBA
-BSCE,Bachelor of Science in Civil Engineering,COE
-BSME,Bachelor of Science in Mechanical Engineering,COE
-BSECE,Bachelor of Science in Electronics and Communications Engineering,COE
-BSN,Bachelor of Science in Nursing,CHS
-BSMT,Bachelor of Science in Medical Technology,CHS
-BSPH,Bachelor of Science in Public Health,CHS
 ABPolSci,Bachelor of Arts in Political Science,CASS
 ABEng,Bachelor of Arts in English,CASS
 ABHistory,Bachelor of Arts in History,CASS
 BAPhilosophy,Bachelor of Arts in Philosophy,CASS
 BASociology,Bachelor of Arts in Sociology,CASS
+BSCS,Bachelor of Science in Computer Science,CCS
+BSIT,Bachelor of Science in Information Technology,CCS
+BSIS,Bachelor of Science in Information Systems,CCS
+BSCA,Bachelor of Science in Computer Applications,CCS

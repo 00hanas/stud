@@ -13,7 +13,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1100, 666)
-        MainWindow.setMinimumSize(1100, 666)
+        MainWindow.setMinimumSize(1100, 711)
         MainWindow.setStyleSheet("background-color: #E3E8E3;")
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -21,11 +21,15 @@ class Ui_MainWindow(object):
         self.gridLayout_2.setObjectName("gridLayout_2")
         self.tabWidget = QtWidgets.QTabWidget(parent=self.centralwidget)
         self.tabWidget.setObjectName("tabWidget")
+        self.tabWidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         self.tabWidget.setStyleSheet("""
+    QTabBar {
+        alignment: right;
+    }
     QTabBar::tab {
-        color: white; /* Text color */
-        background-color: #043927; /* Background color of the tab */
-        padding: 10px; /* Padding around the text */
+        color: white; 
+        background-color: #043927; 
+        padding: 10px; 
         border: 1px solid #065c45; /* Border around the tab */
         border-top-left-radius: 5px; /* Rounded corners */
         border-top-right-radius: 5px;s
@@ -40,6 +44,10 @@ class Ui_MainWindow(object):
     QTabBar::tab:hover {
         background-color: #065c45; /* Background color on hover */
     }
+        QTabWidget::pane {
+        border: 2px solid #A8A29E;
+        background-color: #BFA054;
+        }
 """)
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")

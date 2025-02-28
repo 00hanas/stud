@@ -104,7 +104,7 @@ class Ui_ProgramForm(object):
         font.setBold(True)
         font.setWeight(75)
         self.label_6.setFont(font)
-        self.label_6.setStyleSheet("color: white;")
+        self.label_6.setStyleSheet("color: white; font-weight: bold")
         self.label_6.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_6.setObjectName("label_6")
         self.verticalLayout.addWidget(self.label_6)
